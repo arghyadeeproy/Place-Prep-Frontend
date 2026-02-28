@@ -130,44 +130,47 @@ export default function PlacePrepDashboard() {
           ))}
         </div>
 
-        {/* Charts row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-          <div className="chart-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div>
-                <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>Score Trend</p>
-                <p style={{ color: "#555", fontSize: 11, marginTop: 2 }}>Recent attempts</p>
+        {/* ── My Progress section (anchor target) ── */}
+        <div id="my-progress">
+          {/* Charts row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+            <div className="chart-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>Score Trend</p>
+                  <p style={{ color: "#555", fontSize: 11, marginTop: 2 }}>Recent attempts</p>
+                </div>
+                <span style={{ background: "rgba(255,214,0,0.1)", color: "#FFD600", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(255,214,0,0.2)" }}>Live</span>
               </div>
-              <span style={{ background: "rgba(255,214,0,0.1)", color: "#FFD600", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(255,214,0,0.2)" }}>Live</span>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={weeklyData.length ? weeklyData : [{ day: "—", score: 0 }]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                  <XAxis dataKey="day" tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line type="monotone" dataKey="score" name="Score" stroke="#FFD600" strokeWidth={2.5} dot={{ fill: "#FFD600", strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={weeklyData.length ? weeklyData : [{ day: "—", score: 0 }]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-                <XAxis dataKey="day" tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="score" name="Score" stroke="#FFD600" strokeWidth={2.5} dot={{ fill: "#FFD600", strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
 
-          <div className="chart-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div>
-                <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>Questions Attempted</p>
-                <p style={{ color: "#555", fontSize: 11, marginTop: 2 }}>Per session</p>
+            <div className="chart-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>Questions Attempted</p>
+                  <p style={{ color: "#555", fontSize: 11, marginTop: 2 }}>Per session</p>
+                </div>
+                <span style={{ background: "rgba(84,160,255,0.1)", color: "#54a0ff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(84,160,255,0.2)" }}>{stats.total_questions_attempted ?? 0} Total</span>
               </div>
-              <span style={{ background: "rgba(84,160,255,0.1)", color: "#54a0ff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(84,160,255,0.2)" }}>{stats.total_questions_attempted ?? 0} Total</span>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={weeklyData.length ? weeklyData : [{ day: "—", questions: 0 }]} barSize={22}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                  <XAxis dataKey="day" tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="questions" name="Questions" fill="#FFD600" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={weeklyData.length ? weeklyData : [{ day: "—", questions: 0 }]} barSize={22}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-                <XAxis dataKey="day" tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#555", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="questions" name="Questions" fill="#FFD600" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
           </div>
         </div>
 
@@ -201,7 +204,8 @@ export default function PlacePrepDashboard() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div className="chart-card" style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* ── Achievements section (anchor target) ── */}
+            <div id="achievements" className="chart-card" style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 100, height: 100, flexShrink: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadialBarChart cx="50%" cy="50%" innerRadius="65%" outerRadius="100%" data={radialData} startAngle={90} endAngle={-270}>

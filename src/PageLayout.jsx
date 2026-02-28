@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
@@ -7,12 +7,41 @@ export default function PageLayout({ children, activeRoute }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  const userMenuRef = useRef(null);
+  const settingsRef = useRef(null);
+
   const { user, logout } = useAuth();
 
-  // ✅ Don't navigate manually — onAuthStateChanged fires after logout()
-  //    → isLoggedIn becomes false → ProtectedRoute redirects to "/" automatically
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = async () => {
     await logout();
+  };
+
+  const scrollToSection = (id) => {
+    setUserMenuOpen(false);
+    if (activeRoute !== "/dashboard") {
+      navigate("/dashboard");
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 400);
+    } else {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const tabs = [
@@ -65,16 +94,19 @@ export default function PageLayout({ children, activeRoute }) {
         .dropdown {
           position: absolute; top: 48px; right: 0; min-width: 160px;
           background: #161616; border: 1px solid #2a2a2a; border-radius: 12px;
-          overflow: hidden; z-index: 100;
+          overflow: hidden; z-index: 9999;
           box-shadow: 0 16px 40px rgba(0,0,0,0.7);
         }
         .dropdown-item {
           display: flex; align-items: center; gap: 10px;
           padding: 11px 16px; font-size: 13px; font-weight: 500; color: #bbb;
           cursor: pointer; transition: all 0.15s; border: none; background: none; width: 100%;
+          text-align: left;
         }
         .dropdown-item:hover { background: rgba(255,214,0,0.07); color: #FFD600; }
         .dropdown-item.danger:hover { background: rgba(255,80,80,0.08); color: #ff6b6b; }
+        .tabs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        @media (min-width: 640px) { .tabs-grid { grid-template-columns: repeat(4, 1fr) !important; } }
       `}</style>
 
       <div className="fixed inset-0 bg-[#0a0a0a] overflow-y-auto">
@@ -88,8 +120,8 @@ export default function PageLayout({ children, activeRoute }) {
         <div className="ring-spin-r fixed w-[620px] h-[620px] rounded-full pointer-events-none"
           style={{ top: "50%", left: "50%", border: "1px solid rgba(255,214,0,0.05)" }} />
 
-        <nav className="sticky top-0 z-50 w-full px-6 py-3 flex items-center justify-between"
-          style={{ background: "rgba(10,10,10,0.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid #1a1a1a" }}>
+        <nav className="sticky top-0 w-full px-6 py-3 flex items-center justify-between"
+          style={{ background: "rgba(10,10,10,0.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid #1a1a1a", position: "sticky", zIndex: 9999 }}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <div className="w-9 h-9 rounded-xl bg-yellow-400 flex items-center justify-center"
               style={{ boxShadow: "0 0 16px rgba(255,214,0,0.4)" }}>
@@ -109,7 +141,7 @@ export default function PageLayout({ children, activeRoute }) {
               <div style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, background: "#FFD600", borderRadius: "50%", border: "1.5px solid #0a0a0a" }} />
             </div>
 
-            <div className="icon-btn" title="Settings" style={{ position: "relative", opacity: 0.4, cursor: "not-allowed", pointerEvents: "none" }}>
+            <div ref={settingsRef} className="icon-btn" title="Settings" style={{ position: "relative", opacity: 0.4, cursor: "not-allowed", pointerEvents: "none" }}>
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -123,7 +155,13 @@ export default function PageLayout({ children, activeRoute }) {
               )}
             </div>
 
-            <div className="icon-btn" title="Account" onClick={() => { setUserMenuOpen(!userMenuOpen); setSettingsOpen(false); }} style={{ position: "relative", width: 38, height: 38 }}>
+            <div
+              ref={userMenuRef}
+              className="icon-btn"
+              title="Account"
+              onClick={() => { setUserMenuOpen(prev => !prev); setSettingsOpen(false); }}
+              style={{ position: "relative", width: 38, height: 38 }}
+            >
               {user?.photoURL
                 ? <img src={user.photoURL} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
                 : (
@@ -138,37 +176,25 @@ export default function PageLayout({ children, activeRoute }) {
                     <p style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{user?.name || "User"}</p>
                     <p style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{user?.email || ""}</p>
                   </div>
-                  {[["👤", "My Profile"], ["📊", "My Progress"], ["🏆", "Achievements"]].map(([icon, label]) => (
-                    <button key={label} className="dropdown-item">{icon} {label}</button>
-                  ))}
+                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); }}>👤 My Profile</button>
+                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); scrollToSection("my-progress"); }}>📊 My Progress</button>
+                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); scrollToSection("achievements"); }}>🏆 Achievements</button>
+                  <div style={{ borderTop: "1px solid #222", marginTop: 4 }} />
+                  <button className="dropdown-item danger" onClick={(e) => { e.stopPropagation(); handleLogout(); }} style={{ color: "#ff6b6b" }}>
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                  </button>
                 </div>
               )}
             </div>
-
-            {/* Standalone Logout button — always visible, no dropdown issues */}
-            <button
-              onClick={handleLogout}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "7px 14px", borderRadius: 10,
-                background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.25)",
-                color: "#ff6b6b", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                transition: "all 0.2s", whiteSpace: "nowrap",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,80,80,0.18)"; e.currentTarget.style.borderColor = "rgba(255,80,80,0.5)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,80,80,0.08)"; e.currentTarget.style.borderColor = "rgba(255,80,80,0.25)"; }}
-            >
-              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Logout
-            </button>
           </div>
         </nav>
 
         <div style={{ borderBottom: "1px solid #1a1a1a", background: "rgba(10,10,10,0.6)", backdropFilter: "blur(10px)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            <div className="tabs-grid">
               {tabs.map(tab => (
                 <button key={tab.id} className={`nav-tab ${activeRoute === tab.route ? "active" : ""}`}
                   onClick={() => navigate(tab.route)}
@@ -185,10 +211,6 @@ export default function PageLayout({ children, activeRoute }) {
           {children}
         </main>
       </div>
-
-      {(userMenuOpen || settingsOpen) && (
-        <div className="fixed inset-0 z-40" onClick={() => { setUserMenuOpen(false); setSettingsOpen(false); }} />
-      )}
     </>
   );
 }
