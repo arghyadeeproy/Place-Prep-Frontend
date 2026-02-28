@@ -73,7 +73,7 @@ export default function PlacePrepLogin() {
   const [form, setForm]               = useState({ email: "", password: "", confirm: "", name: "" });
   const [loading, setLoading]         = useState(false);
   const [submitted, setSubmitted]     = useState(false);
-  const [error, setError]             = useState(""); // ← real error messages
+  const [error, setError]             = useState("");
 
   const navigate = useNavigate();
 
@@ -104,7 +104,16 @@ export default function PlacePrepLogin() {
           setError("Passwords do not match."); setLoading(false); return;
         }
         await registerWithEmail({ name: form.name, email: form.email, password: form.password });
-        navigate("/dashboard");
+
+        // ── After registration: go to login with email & password pre-filled ──
+        const registeredEmail    = form.email;
+        const registeredPassword = form.password;
+        setMode("login");
+        setSubmitted(false);
+        setError("");
+        setForm({ email: registeredEmail, password: registeredPassword, confirm: "", name: "" });
+        setLoading(false);
+        return; // skip the finally block's setLoading(false) duplicate
 
       } else if (mode === "forgot") {
         await sendResetEmail(form.email);

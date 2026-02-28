@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "../../PageLayout";
-import { SUBJECTS, MODULES, getLessons, diffColor } from "./subjectsData";
+import { SUBJECTS, MODULES, getLessons, diffColor } from "./SubjectsData";
 
 const LESSON_CONTENT = {
   "intro": {

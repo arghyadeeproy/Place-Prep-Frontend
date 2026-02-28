@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "../../PageLayout";
-import { SUBJECTS, MODULES, diffColor } from "./subjectsData";
+import { SUBJECTS, MODULES, diffColor } from "./SubjectsData";
 
 export default function SubjectModules() {
   const { subjectId } = useParams();
