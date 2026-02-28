@@ -1,8 +1,4 @@
 // services/authService.js
-// ─────────────────────────────────────────────────────────────────────────────
-// All Firebase Auth operations. Components never import Firebase directly —
-// they call these functions.
-// ─────────────────────────────────────────────────────────────────────────────
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -14,57 +10,39 @@ import {
 import { auth, googleProvider } from "../firebase";
 import api from "./api";
 
-// ── Register (email / password) ───────────────────────────────────────────────
 export async function registerWithEmail({ name, email, password, college = "", branch = "", year = 1 }) {
-  // 1. Create Firebase Auth user
+  // 1. Create Firebase Auth user client-side
   const credential = await createUserWithEmailAndPassword(auth, email, password);
-  // 2. Set display name so AuthContext can read it immediately
+  // 2. Set display name immediately
   await updateProfile(credential.user, { displayName: name });
-  // 3. Create Firestore profile via backend — token attached automatically
+  // 3. Create Firestore profile via backend (backend uses get_user_by_email, NOT create_user)
   await api.post("/auth/register/", { name, email, password, college, branch, year });
   return credential.user;
 }
 
-// ── Login (email / password) ──────────────────────────────────────────────────
 export async function loginWithEmail(email, password) {
   const credential = await signInWithEmailAndPassword(auth, email, password);
   return credential.user;
 }
 
-// ── Google Sign-In ─────────────────────────────────────────────────────────────
 export async function loginWithGoogle() {
   const result = await signInWithPopup(auth, googleProvider);
-  const user   = result.user;
-
-  // Ensure backend Firestore profile exists (no-op for returning users)
-  try {
-    await api.post("/auth/register/", {
-      name:     user.displayName || "User",
-      email:    user.email,
-      password: `google_${user.uid}`, // placeholder — backend ignores for existing accounts
-    });
-  } catch (err) {
-    // 400 "account already exists" → perfectly fine for returning users
-    if (err.response?.status !== 400) throw err;
-  }
-
-  return user;
+  // ✅ No backend call needed here — FirebaseAuthentication middleware in
+  // authentication.py auto-creates the Firestore doc on the first authenticated request.
+  return result.user;
 }
 
-// ── Forgot password ───────────────────────────────────────────────────────────
 export async function sendResetEmail(email) {
   await sendPasswordResetEmail(auth, email);
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────────
 export async function logout() {
   await signOut(auth);
 }
 
-// ── Map Firebase error codes → friendly UI messages ───────────────────────────
 export function friendlyFirebaseError(err) {
   const code = err?.code || "";
-  const map  = {
+  const map = {
     "auth/invalid-credential":     "Invalid email or password.",
     "auth/user-not-found":         "No account found with this email.",
     "auth/wrong-password":         "Incorrect password.",
