@@ -12,7 +12,6 @@ export default function PageLayout({ children, activeRoute }) {
 
   const { user, logout } = useAuth();
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
@@ -120,8 +119,12 @@ export default function PageLayout({ children, activeRoute }) {
         <div className="ring-spin-r fixed w-[620px] h-[620px] rounded-full pointer-events-none"
           style={{ top: "50%", left: "50%", border: "1px solid rgba(255,214,0,0.05)" }} />
 
-        <nav className="sticky top-0 w-full px-6 py-3 flex items-center justify-between"
-          style={{ background: "rgba(10,10,10,0.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid #1a1a1a", position: "sticky", zIndex: 9999 }}>
+        {/* ── Navbar ── */}
+        <nav
+          className="sticky top-0 w-full px-6 py-3 flex items-center justify-between"
+          style={{ background: "rgba(10,10,10,0.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid #1a1a1a", zIndex: 9999 }}
+        >
+          {/* Logo */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <div className="w-9 h-9 rounded-xl bg-yellow-400 flex items-center justify-center"
               style={{ boxShadow: "0 0 16px rgba(255,214,0,0.4)" }}>
@@ -133,7 +136,10 @@ export default function PageLayout({ children, activeRoute }) {
             </div>
           </div>
 
+          {/* Right icons */}
           <div className="flex items-center gap-2">
+
+            {/* Notifications */}
             <div className="icon-btn" title="Notifications">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -141,7 +147,13 @@ export default function PageLayout({ children, activeRoute }) {
               <div style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, background: "#FFD600", borderRadius: "50%", border: "1.5px solid #0a0a0a" }} />
             </div>
 
-            <div ref={settingsRef} className="icon-btn" title="Settings" style={{ position: "relative", opacity: 0.4, cursor: "not-allowed", pointerEvents: "none" }}>
+            {/* Settings (disabled) */}
+            <div
+              ref={settingsRef}
+              className="icon-btn"
+              title="Settings"
+              style={{ position: "relative", opacity: 0.4, cursor: "not-allowed", pointerEvents: "none" }}
+            >
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -155,6 +167,7 @@ export default function PageLayout({ children, activeRoute }) {
               )}
             </div>
 
+            {/* User avatar + dropdown */}
             <div
               ref={userMenuRef}
               className="icon-btn"
@@ -162,25 +175,44 @@ export default function PageLayout({ children, activeRoute }) {
               onClick={() => { setUserMenuOpen(prev => !prev); setSettingsOpen(false); }}
               style={{ position: "relative", width: 38, height: 38 }}
             >
-              {user?.photoURL
-                ? <img src={user.photoURL} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
-                : (
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #FFD600, #ff9f43)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#000" }}>{user?.initials || "??"}</span>
-                  </div>
-                )
-              }
+              {user?.photoURL ? (
+                <div style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+                  <img
+                    src={user.photoURL}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                </div>
+              ) : (
+                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #FFD600, #ff9f43)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#000", lineHeight: 1 }}>
+                    {user?.initials || "??"}
+                  </span>
+                </div>
+              )}
+
               {userMenuOpen && (
                 <div className="dropdown dropdown-anim" style={{ minWidth: 180 }}>
                   <div style={{ padding: "12px 16px", borderBottom: "1px solid #222" }}>
                     <p style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{user?.name || "User"}</p>
                     <p style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{user?.email || ""}</p>
                   </div>
-                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); }}>👤 My Profile</button>
-                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); scrollToSection("my-progress"); }}>📊 My Progress</button>
-                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); scrollToSection("achievements"); }}>🏆 Achievements</button>
+                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); }}>
+                    👤 My Profile
+                  </button>
+                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); scrollToSection("my-progress"); }}>
+                    📊 My Progress
+                  </button>
+                  <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); scrollToSection("achievements"); }}>
+                    🏆 Achievements
+                  </button>
                   <div style={{ borderTop: "1px solid #222", marginTop: 4 }} />
-                  <button className="dropdown-item danger" onClick={(e) => { e.stopPropagation(); handleLogout(); }} style={{ color: "#ff6b6b" }}>
+                  <button
+                    className="dropdown-item danger"
+                    onClick={(e) => { e.stopPropagation(); handleLogout(); }}
+                    style={{ color: "#ff6b6b" }}
+                  >
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
@@ -189,16 +221,21 @@ export default function PageLayout({ children, activeRoute }) {
                 </div>
               )}
             </div>
+
           </div>
         </nav>
 
+        {/* ── Tab bar ── */}
         <div style={{ borderBottom: "1px solid #1a1a1a", background: "rgba(10,10,10,0.6)", backdropFilter: "blur(10px)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
             <div className="tabs-grid">
               {tabs.map(tab => (
-                <button key={tab.id} className={`nav-tab ${activeRoute === tab.route ? "active" : ""}`}
+                <button
+                  key={tab.id}
+                  className={`nav-tab ${activeRoute === tab.route ? "active" : ""}`}
                   onClick={() => navigate(tab.route)}
-                  style={{ justifyContent: "center", flexDirection: "column", padding: "16px 12px", gap: 8, borderRadius: 16 }}>
+                  style={{ justifyContent: "center", flexDirection: "column", padding: "16px 12px", gap: 8, borderRadius: 16 }}
+                >
                   <span className="tab-icon">{tab.icon}</span>
                   <span style={{ fontSize: 13 }}>{tab.label}</span>
                 </button>
@@ -207,6 +244,7 @@ export default function PageLayout({ children, activeRoute }) {
           </div>
         </div>
 
+        {/* ── Page content ── */}
         <main className="relative z-10 px-4 sm:px-6 py-6 max-w-7xl mx-auto fade-in">
           {children}
         </main>
