@@ -1,4 +1,4 @@
-// PlacePrepLogin.jsx — Firebase auth integrated · UI completely unchanged
+// PlacePrepLogin.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,7 +9,6 @@ import {
   friendlyFirebaseError,
 } from "./../services/authService";
 
-// ── Icons (unchanged) ──────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -49,7 +48,6 @@ const UserIcon = () => (
   </svg>
 );
 
-// ── InputField moved OUTSIDE the main component to prevent remounting on every render ──
 const InputField = ({ label, name, type = "text", placeholder, icon, rightElement, form, onChange }) => (
   <div>
     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
@@ -65,35 +63,38 @@ const InputField = ({ label, name, type = "text", placeholder, icon, rightElemen
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
 export default function PlacePrepLogin() {
-  const [mode, setMode]               = useState("login");
+  const [mode, setMode]                 = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm]   = useState(false);
-  const [form, setForm]               = useState({ email: "", password: "", confirm: "", name: "" });
-  const [loading, setLoading]         = useState(false);
-  const [submitted, setSubmitted]     = useState(false);
-  const [error, setError]             = useState("");
+  const [form, setForm]                 = useState({ email: "", password: "", confirm: "", name: "" });
+  const [loading, setLoading]           = useState(false);
+  const [submitted, setSubmitted]       = useState(false);
+  const [error, setError]               = useState("");
 
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setError("");
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // ── Preserve email when switching modes so user doesn't have to retype ──
   const resetState = (newMode) => {
     setMode(newMode);
     setSubmitted(false);
     setError("");
-    setForm({ email: "", password: "", confirm: "", name: "" });
+    setShowPassword(false);
+    setShowConfirm(false);
+    // Keep email across mode switches — only wipe password fields
+    setForm(prev => ({ email: prev.email, password: "", confirm: "", name: "" }));
   };
 
-  // ── Main submit — real Firebase calls ──────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       if (mode === "login") {
         await loginWithEmail(form.email, form.password);
@@ -101,19 +102,25 @@ export default function PlacePrepLogin() {
 
       } else if (mode === "signup") {
         if (form.password !== form.confirm) {
-          setError("Passwords do not match."); setLoading(false); return;
+          setError("Passwords do not match.");
+          setLoading(false);
+          return;
         }
-        await registerWithEmail({ name: form.name, email: form.email, password: form.password });
-
-        // ── After registration: go to login with email & password pre-filled ──
-        const registeredEmail    = form.email;
-        const registeredPassword = form.password;
+        await registerWithEmail({
+          name:     form.name,
+          email:    form.email,
+          password: form.password,
+        });
+        // Pre-fill credentials and drop into login
+        const { email, password } = form;
         setMode("login");
         setSubmitted(false);
         setError("");
-        setForm({ email: registeredEmail, password: registeredPassword, confirm: "", name: "" });
+        setShowPassword(false);
+        setShowConfirm(false);
+        setForm({ email, password, confirm: "", name: "" });
         setLoading(false);
-        return; // skip the finally block's setLoading(false) duplicate
+        return;
 
       } else if (mode === "forgot") {
         await sendResetEmail(form.email);
@@ -126,7 +133,6 @@ export default function PlacePrepLogin() {
     }
   };
 
-  // ── Google Sign-In ─────────────────────────────────────────────────────────
   const handleGoogle = async () => {
     setError("");
     setLoading(true);
@@ -165,7 +171,6 @@ export default function PlacePrepLogin() {
     </div>
   );
 
-  // ── JSX (all existing styles and layout preserved exactly) ────────────────
   return (
     <>
       <style>{`
@@ -218,7 +223,7 @@ export default function PlacePrepLogin() {
               <p className="text-gray-600 text-[10px] tracking-[0.3em] uppercase mt-1 font-medium">Ultimate Campus Placement Solution</p>
             </div>
 
-            {/* Error banner — only shows on real errors */}
+            {/* Error banner */}
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center gap-3">
                 <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,9 +243,27 @@ export default function PlacePrepLogin() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-white font-semibold text-lg mb-2">Email Sent!</h3>
-                  <p className="text-gray-500 text-sm mb-6">Reset link sent to <span className="text-yellow-400 font-medium">{form.email}</span></p>
-                  <button onClick={() => resetState("login")} className="text-yellow-400 text-sm hover:underline font-semibold">← Back to Login</button>
+                  <h3 className="text-white font-semibold text-lg mb-2">Check Your Inbox!</h3>
+                  <p className="text-gray-500 text-sm mb-1">
+                    A reset link was sent to
+                  </p>
+                  <p className="text-yellow-400 font-semibold text-sm mb-4">{form.email}</p>
+                  <p className="text-gray-600 text-xs mb-6">
+                    Didn't receive it? Check your spam folder or{" "}
+                    <button
+                      onClick={() => { setSubmitted(false); setError(""); }}
+                      className="text-yellow-400 hover:underline font-semibold"
+                    >
+                      try again
+                    </button>
+                    .
+                  </p>
+                  <button
+                    onClick={() => resetState("login")}
+                    className="text-yellow-400 text-sm hover:underline font-semibold"
+                  >
+                    ← Back to Login
+                  </button>
                 </div>
               ) : (
                 <>
@@ -249,10 +272,17 @@ export default function PlacePrepLogin() {
                     <p className="text-gray-500 text-sm">Enter your email and we'll send you a reset link.</p>
                   </div>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <InputField label="Email Address" name="email" type="email" placeholder="you@example.com" icon={<MailIcon />} form={form} onChange={handleChange} />
+                    <InputField
+                      label="Email Address" name="email" type="email"
+                      placeholder="you@example.com" icon={<MailIcon />}
+                      form={form} onChange={handleChange}
+                    />
                     <SubmitBtn text="Send Reset Link" loadingText="Sending..." />
-                    <button type="button" onClick={() => resetState("login")}
-                      className="w-full text-gray-500 hover:text-yellow-400 text-sm transition-colors py-1 font-medium">
+                    <button
+                      type="button"
+                      onClick={() => resetState("login")}
+                      className="w-full text-gray-500 hover:text-yellow-400 text-sm transition-colors py-1 font-medium"
+                    >
                       ← Back to Login
                     </button>
                   </form>
@@ -267,19 +297,17 @@ export default function PlacePrepLogin() {
                   <InputField label="Full Name" name="name" placeholder="John Doe" icon={<UserIcon />} form={form} onChange={handleChange} />
                   <InputField label="Email Address" name="email" type="email" placeholder="you@example.com" icon={<MailIcon />} form={form} onChange={handleChange} />
                   <InputField label="Password" name="password" type={showPassword ? "text" : "password"}
-                    placeholder="Min. 6 characters" icon={<LockIcon />}
-                    form={form} onChange={handleChange}
+                    placeholder="Min. 6 characters" icon={<LockIcon />} form={form} onChange={handleChange}
                     rightElement={
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-600 hover:text-yellow-400 transition-colors">
+                      <button type="button" onClick={() => setShowPassword(p => !p)} className="text-gray-600 hover:text-yellow-400 transition-colors">
                         <EyeIcon open={showPassword} />
                       </button>
                     }
                   />
                   <InputField label="Confirm Password" name="confirm" type={showConfirm ? "text" : "password"}
-                    placeholder="Re-enter password" icon={<LockIcon />}
-                    form={form} onChange={handleChange}
+                    placeholder="Re-enter password" icon={<LockIcon />} form={form} onChange={handleChange}
                     rightElement={
-                      <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-600 hover:text-yellow-400 transition-colors">
+                      <button type="button" onClick={() => setShowConfirm(p => !p)} className="text-gray-600 hover:text-yellow-400 transition-colors">
                         <EyeIcon open={showConfirm} />
                       </button>
                     }
@@ -288,7 +316,7 @@ export default function PlacePrepLogin() {
                 </form>
                 <Divider label="OR" />
                 <GoogleBtn label="Sign up with Google" />
-                <p className="text-center text-gray-600 text-sm mt-4">
+                <p className="text-center text-gray-500 text-sm mt-4">
                   Already have an account?{" "}
                   <button onClick={() => resetState("login")} className="text-yellow-400 font-bold hover:underline">Sign In</button>
                 </p>
@@ -314,7 +342,7 @@ export default function PlacePrepLogin() {
                         onChange={handleChange} required placeholder="Enter your password"
                         className="w-full bg-[#1c1c1c] border border-[#2e2e2e] hover:border-[#3a3a3a] focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 rounded-xl pl-10 pr-12 py-3 text-white placeholder-gray-600 text-sm outline-none transition-all duration-200"
                       />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 text-gray-600 hover:text-yellow-400 transition-colors">
+                      <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 text-gray-600 hover:text-yellow-400 transition-colors">
                         <EyeIcon open={showPassword} />
                       </button>
                     </div>
