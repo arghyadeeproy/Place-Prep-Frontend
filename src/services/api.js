@@ -15,7 +15,7 @@ import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://place-prep-backend.onrender.com/api",
   headers: { "Content-Type": "application/json" },
   timeout: 30_000, // 30 s — Gemini calls can be slow
 });
