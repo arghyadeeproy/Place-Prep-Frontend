@@ -1,6 +1,3 @@
-// pages/PlacementPrep/CompanyDetail.jsx — Backend connected · UI unchanged
-// Replaces: getCompanyDetail() / generateGenericDetail() from placementData.js
-// Now fetches: GET /api/placement/company/:companyId/  (Gemini-generated, cached)
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "../../PageLayout";

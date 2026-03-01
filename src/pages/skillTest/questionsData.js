@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────
-// QUESTIONS — replace with API call later
-// ─────────────────────────────────────────────────────────────
+
 export const ALL_QUESTIONS = [
   {
     id: 1, tag: "DSA", difficulty: "Medium",

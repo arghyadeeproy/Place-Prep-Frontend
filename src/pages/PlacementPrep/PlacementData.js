@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// PLACEMENT DATA — hardcoded for popular companies
-// Any unknown company gets a generated generic guide
-// Replace with AI backend call later
-// ─────────────────────────────────────────────────────────────────────────────
 
 export const COMPANY_DETAIL = {
   google: {

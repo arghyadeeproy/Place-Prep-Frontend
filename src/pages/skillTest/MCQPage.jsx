@@ -1,5 +1,3 @@
-// pages/skillTest/MCQPage.jsx — Backend connected
-// Features: prev/next nav, tab-switch "Test Ended" overlay, early submit with confirm modal
 import { useState, useEffect, useRef, memo, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { submitTest } from "../../services/skilltestService";
