@@ -289,7 +289,6 @@ export default function PlacePrepLogin() {
                 </>
               )
             )}
-
             {/* ── SIGN UP ── */}
             {mode === "signup" && (
               <>
@@ -322,7 +321,6 @@ export default function PlacePrepLogin() {
                 </p>
               </>
             )}
-
             {/* ── LOGIN ── */}
             {mode === "login" && (
               <>
@@ -369,7 +367,6 @@ export default function PlacePrepLogin() {
                 </div>
               </>
             )}
-
             <p className="text-center text-gray-700 text-xs mt-4 font-medium">
               By continuing, you agree to our{" "}
               <span className="text-yellow-400/60 hover:text-yellow-400 cursor-pointer transition-colors">Terms</span>

@@ -1,7 +1,3 @@
-// src/firebase.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Firebase app init. Import auth + googleProvider wherever needed.
-// ─────────────────────────────────────────────────────────────────────────────
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 

@@ -1,4 +1,4 @@
-// App.jsx — Final version with correct import paths
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider }          from "./AuthContext";
 import { ProtectedRoute, PublicRoute } from "./ProtectedRoute";

@@ -1,7 +1,3 @@
-// pages/SkillTest.jsx — Backend connected · UI unchanged
-// Replaces: hardcoded TESTS from questionsData.js
-// Now fetches: GET /api/skilltest/topics/
-// On "Start Test" → POST /api/skilltest/generate/ → navigate to MCQPage with session data
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../PageLayout";

@@ -1,15 +1,3 @@
-// services/api.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Central Axios instance used by ALL service files.
-//
-// Request interceptor:
-//   • Gets a fresh Firebase ID token before every request
-//   • getIdToken(true) forces a refresh if the token is expired
-//   • Attaches: Authorization: Bearer <id_token>
-//
-// Response interceptor:
-//   • 401 / 403 → sign out Firebase + hard redirect to /
-// ─────────────────────────────────────────────────────────────────────────────
 import axios from "axios";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";

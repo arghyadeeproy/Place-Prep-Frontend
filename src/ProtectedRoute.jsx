@@ -1,9 +1,3 @@
-// ProtectedRoute.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// ProtectedRoute — shows a spinner while Firebase resolves cached auth,
-//                  then redirects to / if the user isn't logged in.
-// PublicRoute    — redirects to /dashboard if user IS logged in (login page).
-// ─────────────────────────────────────────────────────────────────────────────
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 

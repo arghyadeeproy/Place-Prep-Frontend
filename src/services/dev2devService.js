@@ -22,8 +22,6 @@ export async function togglePostLike(postId) {
   const res = await api.post(`/dev2dev/posts/${postId}/like/`);
   return res.data.data; // { liked: bool, like_count: int }
 }
-
-// ── Comments ───────────────────────────────────────────────────────────────
 export async function fetchComments(postId) {
   const res = await api.get(`/dev2dev/posts/${postId}/comments/`);
   return res.data.data; // array of comment objects

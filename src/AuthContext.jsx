@@ -1,14 +1,3 @@
-// AuthContext.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Wraps Firebase's onAuthStateChanged so every component reacts to
-// login / logout instantly with zero extra code.
-//
-// Provides:
-//   user        → { uid, name, email, initials, photoURL } or null
-//   loading     → true while Firebase resolves the initial auth state
-//   isLoggedIn  → boolean shorthand
-//   logout()    → Firebase sign-out (AuthContext updates automatically)
-// ─────────────────────────────────────────────────────────────────────────────
 import { createContext, useContext, useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
@@ -18,23 +7,18 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [firebaseUser, setFirebaseUser] = useState(null);
-  const [loading, setLoading]           = useState(true); // true until Firebase resolves
-
+  const [loading, setLoading]           = useState(true); 
   useEffect(() => {
-    // Firebase fires this immediately with the cached session — no flicker
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
       setLoading(false);
     });
-    return unsubscribe; // cleanup listener on unmount
+    return unsubscribe;
   }, []);
 
   const logout = async () => {
     await firebaseLogout();
-    // onAuthStateChanged above fires → firebaseUser → null automatically
   };
-
-  // Derive a clean display object for the UI
   const user = firebaseUser
     ? {
         uid:      firebaseUser.uid,

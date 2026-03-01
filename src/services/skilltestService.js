@@ -9,8 +9,6 @@ export async function fetchTopics() {
 export async function generateTest({ topic, difficulty, count = 10 }) {
   const res = await api.post("/skilltest/generate/", { topic, difficulty, count });
   return res.data.data;
-  // returns: { session_id, topic, difficulty, count, time_minutes, questions[] }
-  // questions have NO answer field — backend holds them server-side
 }
 
 export async function submitTest(sessionId, { answers, time_taken_seconds }) {
@@ -20,8 +18,6 @@ export async function submitTest(sessionId, { answers, time_taken_seconds }) {
     time_taken_seconds,
   });
   return res.data.data;
-  // returns: { attempt_id, total, correct, wrong, skipped, score_pct, grade, results[] }
-  // results[] includes correct_answer + explanation for every question
 }
 
 export async function fetchAttemptHistory() {

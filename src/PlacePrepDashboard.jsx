@@ -1,4 +1,3 @@
-// PlacePrepDashboard.jsx — Uses PageLayout for navbar (no duplicate nav)
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LineChart, Line, BarChart, Bar, RadialBarChart, RadialBar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PolarAngleAxis } from "recharts";

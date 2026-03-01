@@ -11,11 +11,8 @@ import { auth, googleProvider } from "../firebase";
 import api from "./api";
 
 export async function registerWithEmail({ name, email, password, college = "", branch = "", year = 1 }) {
-  // 1. Create Firebase Auth user client-side
   const credential = await createUserWithEmailAndPassword(auth, email, password);
-  // 2. Set display name immediately
   await updateProfile(credential.user, { displayName: name });
-  // 3. Create Firestore profile via backend (backend uses get_user_by_email, NOT create_user)
   await api.post("/auth/register/", { name, email, password, college, branch, year });
   return credential.user;
 }
@@ -27,8 +24,6 @@ export async function loginWithEmail(email, password) {
 
 export async function loginWithGoogle() {
   const result = await signInWithPopup(auth, googleProvider);
-  // ✅ No backend call needed here — FirebaseAuthentication middleware in
-  // authentication.py auto-creates the Firestore doc on the first authenticated request.
   return result.user;
 }
 
