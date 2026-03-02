@@ -1,14 +1,77 @@
+// pages/studySub/SubjectModules.jsx — Backend connected
+// Replaces: static MODULES[subjectId] lookup from SubjectsData.js
+// Now fetches: GET /api/study/<subject_id>/modules/
+//
+// Backend module shape:
+//   { id, title, icon, difficulty, lesson_count, subject_id,
+//     completed_lessons: [1,2,...] (array of completed order ints) }
+//
+// UI is pixel-identical to original SubjectModules.jsx
+
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "../../PageLayout";
-import { SUBJECTS, MODULES, diffColor } from "./SubjectsData";
+import { SUBJECTS, diffColor } from "./SubjectsData";
+import { fetchSubjectModules } from "../../services/studyservice";
+
+// ── Skeleton card (same proportions as real mod-card) ─────────
+const sk = (w, h, r = 6, mb = 0) => ({
+  width: w, height: h, borderRadius: r, marginBottom: mb, flexShrink: 0,
+  background: "linear-gradient(90deg,#1a1a1a 25%,#222 50%,#1a1a1a 75%)",
+  backgroundSize: "200% 100%", animation: "shimmer 1.4s infinite",
+});
+
+const SkeletonModCard = () => (
+  <div style={{ background: "#111", border: "1px solid #1f1f1f", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", gap: 12 }}>
+      <div style={sk(42, 42, 13)} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={sk("70%", 14, 6)} />
+        <div style={sk("40%", 11, 5)} />
+      </div>
+    </div>
+    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+      <div style={sk(80, 11, 5)} />
+      <div style={sk(30, 11, 5)} />
+    </div>
+    <div style={sk("100%", 5, 99)} />
+    <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <div style={sk(95, 24, 6)} />
+      <div style={sk(48, 13, 5)} />
+    </div>
+  </div>
+);
 
 export default function SubjectModules() {
   const { subjectId } = useParams();
-  const navigate = useNavigate();
+  const navigate      = useNavigate();
 
   const subject = SUBJECTS.find(s => s.id === subjectId);
-  const modules = MODULES[subjectId] || [];
 
+  const [modules, setModules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState("");
+
+  useEffect(() => {
+    if (!subject) return;
+    setLoading(true);
+    setError("");
+    fetchSubjectModules(subjectId)
+      .then(data => {
+        // Normalise to the shape the UI already uses
+        // backend: lesson_count, completed_lessons (int[])
+        // ui uses: lessons (int), done (int)
+        setModules(data.map(m => ({
+          ...m,
+          lessons: m.lesson_count ?? m.lessons ?? 0,
+          done:    m.completed_lessons?.length ?? m.done ?? 0,
+        })));
+      })
+      .catch(() => setError("Failed to load modules. Please try again."))
+      .finally(() => setLoading(false));
+  }, [subjectId]);
+
+  // ── Not found guard ───────────────────────────────────────────
   if (!subject) {
     return (
       <PageLayout activeRoute="/StudySub">
@@ -26,27 +89,27 @@ export default function SubjectModules() {
   const totalLessons = modules.reduce((a, m) => a + m.lessons, 0);
   const doneLessons  = modules.reduce((a, m) => a + m.done, 0);
   const overallPct   = totalLessons ? Math.round((doneLessons / totalLessons) * 100) : 0;
-
-  const byDifficulty = (d) => modules.filter(m => m.difficulty === d);
+  const byDifficulty = d => modules.filter(m => m.difficulty === d);
 
   return (
     <PageLayout activeRoute="/StudySub">
       <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp  { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         .mod-page { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) forwards; }
-        .mod-card { background: #111; border: 1px solid #1f1f1f; border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.22s; display: flex; flex-direction: column; gap: 12; }
-        .mod-card:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(0,0,0,0.5); }
-        .progress-track { background: #1e1e1e; border-radius: 99px; height: 5px; overflow: hidden; }
-        .progress-fill  { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
-        .crumb-btn { display: inline-flex; align-items: center; gap: 6px; background: #161616; border: 1px solid #2a2a2a; color: #666; border-radius: 9px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.18s; font-family: 'Inter',sans-serif; }
-        .crumb-btn:hover { border-color: rgba(255,214,0,0.35); color: #FFD600; background: rgba(255,214,0,0.06); }
-        .diff-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #444; margin: 20px 0 12px; display: flex; align-items: center; gap: 8; }
-        .diff-section-title::after { content: ''; flex: 1; height: 1px; background: #1e1e1e; }
+        .mod-card { background:#111; border:1px solid #1f1f1f; border-radius:16px; padding:20px; cursor:pointer; transition:all 0.22s; display:flex; flex-direction:column; gap:12px; }
+        .mod-card:hover { transform:translateY(-3px); box-shadow:0 12px 35px rgba(0,0,0,0.5); }
+        .progress-track { background:#1e1e1e; border-radius:99px; height:5px; overflow:hidden; }
+        .progress-fill  { height:100%; border-radius:99px; transition:width 0.8s ease; }
+        .crumb-btn { display:inline-flex; align-items:center; gap:6px; background:#161616; border:1px solid #2a2a2a; color:#666; border-radius:9px; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.18s; font-family:'Inter',sans-serif; }
+        .crumb-btn:hover { border-color:rgba(255,214,0,0.35); color:#FFD600; background:rgba(255,214,0,0.06); }
+        .diff-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.14em; color:#444; margin:20px 0 12px; display:flex; align-items:center; gap:8px; }
+        .diff-section-title::after { content:''; flex:1; height:1px; background:#1e1e1e; }
       `}</style>
 
       <div className="mod-page">
 
-        {/* Breadcrumb */}
+        {/* ── Breadcrumb ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
           <button className="crumb-btn" onClick={() => navigate("/StudySub")}>📚 Subjects</button>
           <span style={{ color: "#2a2a2a", fontSize: 14 }}>›</span>
@@ -55,7 +118,18 @@ export default function SubjectModules() {
           </span>
         </div>
 
-        {/* Subject hero */}
+        {/* ── Error banner ── */}
+        {error && (
+          <div style={{ background: "rgba(255,80,80,0.1)", border: "1px solid rgba(255,80,80,0.25)", borderRadius: 12, padding: "12px 16px", marginBottom: 20, color: "#ff6b6b", fontSize: 13 }}>
+            ⚠️ {error}
+            <button onClick={() => window.location.reload()}
+              style={{ marginLeft: 12, background: "none", border: "1px solid rgba(255,80,80,0.4)", color: "#ff6b6b", borderRadius: 7, padding: "2px 10px", fontSize: 11, cursor: "pointer" }}>
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* ── Subject hero ── */}
         <div style={{ background: "#111", border: `1px solid ${subject.color}25`, borderRadius: 20, padding: "28px 28px 24px", marginBottom: 28, boxShadow: `0 0 40px ${subject.color}10` }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 18, flexWrap: "wrap" }}>
             <div style={{ width: 60, height: 60, borderRadius: 18, background: `${subject.color}18`, border: `2px solid ${subject.color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>
@@ -65,7 +139,12 @@ export default function SubjectModules() {
               <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 800, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: "0.06em", marginBottom: 4 }}>{subject.name}</h1>
               <p style={{ color: "#555", fontSize: 13, marginBottom: 16 }}>{subject.desc}</p>
               <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                {[[modules.length,"Modules"],[totalLessons,"Lessons"],[doneLessons,"Completed"],[`${overallPct}%`,"Progress"]].map(([val, lbl]) => (
+                {[
+                  [loading ? "—" : modules.length,    "Modules"],
+                  [loading ? "—" : totalLessons,       "Lessons"],
+                  [loading ? "—" : doneLessons,        "Completed"],
+                  [loading ? "—" : `${overallPct}%`,  "Progress"],
+                ].map(([val, lbl]) => (
                   <div key={lbl}>
                     <p style={{ color: subject.color, fontWeight: 800, fontSize: 18, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: "0.05em" }}>{val}</p>
                     <p style={{ color: "#444", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>{lbl}</p>
@@ -73,22 +152,32 @@ export default function SubjectModules() {
                 ))}
               </div>
             </div>
+            {/* Progress circle */}
             <div style={{ textAlign: "center", flexShrink: 0 }}>
               <div style={{ width: 72, height: 72, borderRadius: "50%", background: `${subject.color}14`, border: `3px solid ${subject.color}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${subject.color}25` }}>
-                <span style={{ color: subject.color, fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: "0.03em" }}>{overallPct}%</span>
+                <span style={{ color: subject.color, fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: "0.03em" }}>
+                  {loading ? "—" : `${overallPct}%`}
+                </span>
               </div>
               <p style={{ color: "#444", fontSize: 10, marginTop: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Done</p>
             </div>
           </div>
           <div style={{ marginTop: 20 }}>
             <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${overallPct}%`, background: `linear-gradient(90deg, ${subject.color}, ${subject.color}77)` }} />
+              <div className="progress-fill" style={{ width: loading ? "0%" : `${overallPct}%`, background: `linear-gradient(90deg,${subject.color},${subject.color}77)` }} />
             </div>
           </div>
         </div>
 
-        {/* Modules grouped by difficulty */}
-        {["Easy", "Medium", "Hard"].map(diff => {
+        {/* ── Skeleton grid while loading ── */}
+        {loading && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 12 }}>
+            {Array(6).fill(0).map((_, i) => <SkeletonModCard key={i} />)}
+          </div>
+        )}
+
+        {/* ── Modules grouped by difficulty ── */}
+        {!loading && ["Easy", "Medium", "Hard"].map(diff => {
           const mods = byDifficulty(diff);
           if (!mods.length) return null;
           return (
@@ -97,22 +186,25 @@ export default function SubjectModules() {
                 <span style={{ color: diffColor[diff] }}>{diff === "Easy" ? "🟢" : diff === "Medium" ? "🟡" : "🔴"}</span>
                 <span style={{ color: diffColor[diff] }}>{diff}</span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
-                {mods.map((mod) => {
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 12 }}>
+                {mods.map(mod => {
                   const pct       = mod.lessons ? Math.round((mod.done / mod.lessons) * 100) : 0;
-                  const isDone    = mod.done === mod.lessons;
-                  const isStarted = mod.done > 0;
+                  const isDone    = mod.done > 0 && mod.done >= mod.lessons;
+                  const isStarted = mod.done > 0 && !isDone;
                   return (
-                    <div key={mod.id} className="mod-card"
+                    <div
+                      key={mod.id}
+                      className="mod-card"
                       style={{ borderColor: isDone ? `${subject.color}35` : "#1f1f1f" }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = `${subject.color}40`}
                       onMouseLeave={e => e.currentTarget.style.borderColor = isDone ? `${subject.color}35` : "#1f1f1f"}
-                      onClick={() => navigate(`/StudySub/${subjectId}/${mod.id}`)}>
-
+                      onClick={() => navigate(`/StudySub/${subjectId}/${mod.id}`)}
+                    >
+                      {/* Card header */}
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <div style={{ width: 42, height: 42, borderRadius: 13, background: `${subject.color}15`, border: `1px solid ${subject.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
-                            {mod.icon}
+                            {mod.icon || "📖"}
                           </div>
                           <div>
                             <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{mod.title}</p>
@@ -122,16 +214,18 @@ export default function SubjectModules() {
                         {isDone && <span style={{ fontSize: 18, flexShrink: 0 }}>✅</span>}
                       </div>
 
+                      {/* Progress */}
                       <div>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                           <span style={{ color: "#444", fontSize: 11 }}>{mod.done}/{mod.lessons} done</span>
                           <span style={{ color: isDone ? subject.color : "#555", fontSize: 11, fontWeight: 700 }}>{pct}%</span>
                         </div>
                         <div className="progress-track">
-                          <div className="progress-fill" style={{ width: `${pct}%`, background: isDone ? `linear-gradient(90deg, ${subject.color}, ${subject.color}88)` : `linear-gradient(90deg, ${subject.color}88, ${subject.color}44)` }} />
+                          <div className="progress-fill" style={{ width: `${pct}%`, background: isDone ? `linear-gradient(90deg,${subject.color},${subject.color}88)` : `linear-gradient(90deg,${subject.color}88,${subject.color}44)` }} />
                         </div>
                       </div>
 
+                      {/* Status badge + open arrow */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: isDone ? `${subject.color}18` : isStarted ? "rgba(255,159,67,0.12)" : "#1a1a1a", color: isDone ? subject.color : isStarted ? "#ff9f43" : "#444", border: isDone ? `1px solid ${subject.color}30` : isStarted ? "1px solid rgba(255,159,67,0.25)" : "1px solid #2a2a2a" }}>
                           {isDone ? "✓ Completed" : isStarted ? "▶ In Progress" : "◯ Not Started"}
@@ -145,6 +239,15 @@ export default function SubjectModules() {
             </div>
           );
         })}
+
+        {/* ── Empty state ── */}
+        {!loading && !error && modules.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#444" }}>
+            <p style={{ fontSize: 36, marginBottom: 12 }}>🧩</p>
+            <p style={{ fontWeight: 700, color: "#555", marginBottom: 6 }}>No modules found.</p>
+            <p style={{ fontSize: 13 }}>Modules are being set up — check back soon.</p>
+          </div>
+        )}
       </div>
     </PageLayout>
   );
