@@ -63,11 +63,18 @@ export default function PlacePrepDashboard() {
   const readiness   = stats.accuracy_pct || 0;
   const radialData  = [{ name: "Progress", value: readiness, fill: "#FFD600" }];
 
-  const greeting = (() => {
+const { greeting, emoji } = (() => {
     const h = new Date().getHours();
-    if (h < 12) return "Good Morning";
-    if (h < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (h >= 0  && h < 4)  return { greeting: "Still up at this hour?",        emoji: "🌙" };
+    if (h >= 4  && h < 6)  return { greeting: "Early bird or no sleep?",        emoji: "🌅" };
+    if (h >= 6  && h < 9)  return { greeting: "Good Morning",                   emoji: "☀️" };
+    if (h >= 9  && h < 12) return { greeting: "Crushing it this morning",       emoji: "💪" };
+    if (h >= 12 && h < 14) return { greeting: "Afternoon grind, let's go",      emoji: "🚀" };
+    if (h >= 14 && h < 17) return { greeting: "Powering through the afternoon", emoji: "⚡" };
+    if (h >= 17 && h < 19) return { greeting: "Evening session, nice",          emoji: "🌆" };
+    if (h >= 19 && h < 21) return { greeting: "Burning the evening oil",        emoji: "🔥" };
+    if (h >= 21 && h < 23) return { greeting: "Working overtime, respect",      emoji: "🏆" };
+    return                         { greeting: "Midnight warrior mode",          emoji: "⚔️" };
   })();
 
   return (
